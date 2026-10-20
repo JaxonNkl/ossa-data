@@ -1,6 +1,6 @@
 import { pathToFileURL } from "node:url";
 import { CloudflareKV } from "./cloudflare-kv.mjs";
-import { refresh } from "./source.mjs";
+import { refresh, refreshImgw } from "./source.mjs";
 
 export async function run(store, now = Date.now(), fetcher = fetch) {
   const result = {};
@@ -11,13 +11,16 @@ export async function run(store, now = Date.now(), fetcher = fetch) {
   ]) {
     const previous = await store.get(kind);
     if (
-      previous?.last_attempt_at &&
-      now - Date.parse(previous.last_attempt_at) < interval
+      (previous?.bundle_attempt_at || previous?.last_attempt_at) &&
+      now - Date.parse(previous.bundle_attempt_at || previous.last_attempt_at) <
+        interval
     ) {
       result[kind] = "skipped";
       continue;
     }
-    result[kind] = (await refresh(kind, { SOURCES: store }, fetcher, now))
+    result[kind] = (await (kind === "weather"
+      ? refreshImgw(store, fetcher, now)
+      : refresh(kind, { SOURCES: store }, fetcher, now)))
       ? "ok"
       : "error";
   }

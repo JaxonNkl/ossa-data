@@ -1,6 +1,7 @@
 import { regions } from "./regions.mjs";
 export const urls = {
   weather: "https://danepubliczne.imgw.pl/api/data/warningsmeteo",
+  hydro: "https://danepubliczne.imgw.pl/api/data/warningshydro",
   cert: "https://hole.cert.pl/domains/v2/domains.txt",
   news: "https://moje.cert.pl/advisories/feed/",
 };
@@ -222,6 +223,133 @@ export async function weatherRecords(raw, previous = null) {
   }
   return [...result.values()];
 }
+export async function hydroRecords(raw, previous = null) {
+  const data = JSON.parse(raw);
+  if (
+    data?.message === "Brak ostrzeżeń hydrologicznych" &&
+    Object.keys(data).length === 1
+  )
+    return [];
+  if (!Array.isArray(data) || data.length > 10000)
+    throw Error("Invalid hydro response");
+  const result = new Map();
+  for (const original of data) {
+    const {
+      zdarzenie: title,
+      przebieg,
+      komentarz = "",
+      obszary,
+      numer,
+      biuro,
+    } = original ?? {};
+    const level = String(original?.["stopień"] ?? original?.stopien);
+    if (
+      typeof title !== "string" ||
+      !title.trim() ||
+      title.length > 500 ||
+      typeof przebieg !== "string" ||
+      !przebieg.trim() ||
+      przebieg.length > 30000 ||
+      typeof komentarz !== "string" ||
+      komentarz.length > 30000 ||
+      !["-1", "1", "2", "3"].includes(level) ||
+      (level === "-1" && !/susza/i.test(title)) ||
+      !Array.isArray(obszary) ||
+      !obszary.length ||
+      !numer ||
+      typeof biuro !== "string"
+    )
+      throw Error("Invalid hydro warning");
+    const locations = [],
+      areaCodes = [],
+      descriptions = [];
+    for (const area of obszary) {
+      if (
+        typeof area.wojewodztwo !== "string" ||
+        typeof area.opis !== "string" ||
+        !area.opis.trim() ||
+        !Array.isArray(area.kod_zlewni) ||
+        !area.kod_zlewni.length ||
+        !area.kod_zlewni.every(
+          (x) => typeof x === "string" && /^[A-Za-z0-9_]+$/.test(x),
+        )
+      )
+        throw Error("Invalid hydro area");
+      const region = Object.values(regions).find(
+        ([name]) =>
+          name.toLocaleLowerCase("pl") ===
+          area.wojewodztwo.trim().toLocaleLowerCase("pl"),
+      );
+      if (!region) throw Error("Unknown hydro region");
+      if (!locations.some((x) => x.region === region[0]))
+        locations.push({ region: region[0], coords: region[1] });
+      descriptions.push(area.opis.trim());
+      areaCodes.push(...area.kod_zlewni);
+    }
+    const validFrom = stamp(original.data_od);
+    const untilRevoked = original.data_do === "9999-12-31 23:59:59";
+    const validTo = untilRevoked ? undefined : stamp(original.data_do);
+    if (validTo && validTo <= validFrom) throw Error("Invalid hydro validity");
+    const publishedAt = stamp(original.opublikowano);
+    const id =
+      "imgw-hydro-" +
+      (
+        await hash(
+          JSON.stringify([biuro, String(numer), publishedAt.slice(0, 4)]),
+        )
+      ).slice(0, 24);
+    const fingerprint = await hash(
+      JSON.stringify(
+        Object.fromEntries(
+          Object.entries(original).sort(([a], [b]) => a.localeCompare(b)),
+        ),
+      ),
+    );
+    if (result.has(id) && result.get(id).fingerprint !== fingerprint)
+      throw Error("Conflicting hydro duplicates");
+    const old = previous?.records?.find((x) => x.event.id === id);
+    const event = {
+      id,
+      title: title.trim(),
+      summary: [przebieg.trim(), komentarz.trim()].filter(Boolean).join("\n\n"),
+      category: "Komunikaty",
+      source: "IMGW-PIB",
+      sourceId: "imgw-hydro",
+      sourceUrl: urls.hydro,
+      region: locations.map((x) => x.region).join(", "),
+      regions: locations.map((x) => x.region),
+      locations,
+      coords: locations[0].coords,
+      status:
+        level === "-1"
+          ? "Susza hydrologiczna · IMGW"
+          : `Stopień ${level} / 3 · IMGW`,
+      severity: level === "-1" ? 0 : Number(level),
+      tone: "blue",
+      isDemo: false,
+      validFrom,
+      validTo,
+      untilRevoked,
+      publishedAt,
+      areaCodes: [...new Set(areaCodes)].sort(),
+      revision:
+        (old?.event.revision || 0) + (old?.fingerprint === fingerprint ? 0 : 1),
+      time: new Intl.DateTimeFormat("pl-PL", {
+        timeZone: "Europe/Warsaw",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(new Date(publishedAt)),
+      action:
+        "Przeczytaj pełne ostrzeżenie IMGW-PIB i stosuj się do oficjalnych komunikatów lokalnych służb.",
+      scope:
+        descriptions.join("; ") +
+        ". Znaczniki wskazują województwa, nie granice zlewni ani obszary zalania.",
+      evidenceUrl: `/api/backend/v1/events/${id}/evidence`,
+    };
+    result.set(id, { event, original, fingerprint });
+  }
+  return [...result.values()];
+}
 export function status(kind, snapshot, now = Date.now()) {
   if (kind === "news") {
     const age = snapshot?.fetched_at
@@ -251,11 +379,18 @@ export function status(kind, snapshot, now = Date.now()) {
     ? Math.max(0, Math.floor((now - Date.parse(snapshot.fetched_at)) / 1000))
     : null;
   return {
-    id: kind === "cert" ? "cert-pl-domains" : "imgw-meteo",
+    id:
+      kind === "cert"
+        ? "cert-pl-domains"
+        : kind === "hydro"
+          ? "imgw-hydro"
+          : "imgw-meteo",
     name:
       kind === "cert"
         ? "CERT Polska — Lista Ostrzeżeń"
-        : "IMGW-PIB — ostrzeżenia meteorologiczne",
+        : kind === "hydro"
+          ? "IMGW-PIB — ostrzeżenia hydrologiczne"
+          : "IMGW-PIB — ostrzeżenia meteorologiczne",
     url: urls[kind],
     status: age === null ? "unavailable" : age < fresh ? "fresh" : "stale",
     fetched_at: snapshot?.fetched_at || null,

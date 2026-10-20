@@ -41,3 +41,6 @@ Dokumentacja: [GitHub Actions billing](https://docs.github.com/en/billing/concep
 ## Komunikaty RSS
 
 Pobieramy kategorię „Dla użytkowników”, maksymalnie 12 publikacji z ostatnich 30 dni. Tytuł, data publikacji i skrócony opis pochodzą z oficjalnego kanału. HTML, załączniki i zewnętrzne linki w opisach nie są renderowane. Link karty może prowadzić tylko do HTTPS moje.cert.pl/komunikaty/. Nie ustalamy poziomu ryzyka ani czasu obowiązywania oszustwa. Kopia RSS jest aktualna przez 2 godziny. Licencja publikacji: CERT Polska / NASK-PIB, CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/).
+
+## Hydrologia IMGW
+Ostrzeżenia hydrologiczne i meteorologiczne są pobierane niezależnie, a następnie publikowane jednym zapisem w `ossa:weather`. Każde źródło zachowuje własny czas pobrania i stan ostatniej próby. Nieudana próba jednego źródła nie usuwa poprzedniej kopii ani nie blokuje aktualizacji drugiego. Nominalny budżet pozostaje 768 zapisów KV na dobę. GitHub Actions schedule jest best effort, może mieć opóźnienia; stan świeżości musi pozostać widoczny w aplikacji.

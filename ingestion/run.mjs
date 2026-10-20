@@ -1,14 +1,14 @@
 import { pathToFileURL } from "node:url";
 import { CloudflareKV } from "./cloudflare-kv.mjs";
 import { refreshAir } from "./air.mjs";
-import { refresh, refreshImgw } from "./source.mjs";
+import { refresh, refreshImgw, refreshNews } from "./source.mjs";
 
 export async function run(store, now = Date.now(), fetcher = fetch) {
   const result = {};
   for (const [kind, interval] of [
     ["weather", 240000],
     ["cert", 1800000],
-    ["news", 1800000],
+    ["news", 900000],
     ["air", 3600000],
   ]) {
     const previous = await store.get(kind);
@@ -23,9 +23,11 @@ export async function run(store, now = Date.now(), fetcher = fetch) {
     }
     result[kind] = (await (kind === "weather"
       ? refreshImgw(store, fetcher, now)
-      : kind === "air"
-        ? refreshAir(store, fetcher, now)
-        : refresh(kind, { SOURCES: store }, fetcher, now)))
+      : kind === "news"
+        ? refreshNews(store, fetcher, now)
+        : kind === "air"
+          ? refreshAir(store, fetcher, now)
+          : refresh(kind, { SOURCES: store }, fetcher, now)))
       ? "ok"
       : "error";
   }

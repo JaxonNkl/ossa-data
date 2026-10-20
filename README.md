@@ -47,3 +47,6 @@ Ostrzeżenia hydrologiczne i meteorologiczne są pobierane niezależnie, a nast�
 
 ## GIOŚ
 Raz na godzinę pobierana jest paczka danych stacji, indeksów i pomiarów PM10/PM2.5, publikowana jako `ossa:air` (24 dodatkowe zapisy na dobę, nominalnie 792 łącznie). Cztery równoległe połączenia; częściowe błędy zachowują starsze dane danej stacji z oznaczeniem nieaktualności. Timestampy pomiarów są interpretowane w strefie Europe/Warsaw.
+
+## Publikacje RCB
+Publiczna lista gov.pl oraz pełne treści do 10 aktualnych artykułów są odczytywane standardowym parserem HTML. Aktualizacje pozostają przed wcześniejszą treścią. Moduł nie klasyfikuje publikacji jako aktualnych alarmów i nie zgaduje obszarów ani terminów ich obowiązywania. Kopia jest zapisywana we wspólnej paczce `ossa:news` co 15 minut wraz z niezależnym stanem źródła. Łącznie z IMGW, CERT i GIOŚ nominalnie 840 zapisów na dobę.

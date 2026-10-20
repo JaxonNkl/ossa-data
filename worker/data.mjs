@@ -351,6 +351,19 @@ export async function hydroRecords(raw, previous = null) {
   return [...result.values()];
 }
 export function status(kind, snapshot, now = Date.now()) {
+  if (kind === "rcb") {
+    const age = snapshot?.fetched_at
+      ? (now - Date.parse(snapshot.fetched_at)) / 1000
+      : null;
+    return {
+      id: "rcb-publications",
+      name: "Rządowe Centrum Bezpieczeństwa",
+      status: age === null ? "unavailable" : age < 3600 ? "fresh" : "stale",
+      fetched_at: snapshot?.fetched_at ?? null,
+      fresh_for_seconds: 3600,
+      last_attempt_outcome: snapshot?.last_attempt_outcome ?? null,
+    };
+  }
   if (kind === "air") {
     const age = snapshot?.fetched_at
       ? (now - Date.parse(snapshot.fetched_at)) / 1000

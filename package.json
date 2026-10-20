@@ -10,6 +10,7 @@
     "ingest": "node ingestion/run.mjs"
   },
   "dependencies": {
+    "parse5": "^8.0.1",
     "fast-xml-parser": "^5.11.2"
   }
 }

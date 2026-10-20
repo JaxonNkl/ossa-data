@@ -97,3 +97,28 @@ export async function refreshImgw(store, fetcher = fetch, now = Date.now()) {
   );
   return results.every(Boolean);
 }
+
+export async function refreshNews(store, fetcher = fetch, now = Date.now()) {
+  const { refreshRcb } = await import("./rcb.mjs");
+  const previous = await store.get("news");
+  let news = previous;
+  const memory = {
+    get: async () => previous,
+    put: async (_, value) => {
+      news = JSON.parse(value);
+    },
+  };
+  const [ok, rcb] = await Promise.all([
+    refresh("news", { SOURCES: memory }, fetcher, now),
+    refreshRcb(previous?.rcb, fetcher, now),
+  ]);
+  await store.put(
+    "news",
+    JSON.stringify({
+      ...news,
+      rcb,
+      bundle_attempt_at: new Date(now).toISOString(),
+    }),
+  );
+  return ok && rcb.last_attempt_outcome === "ok";
+}

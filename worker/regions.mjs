@@ -1,0 +1,18 @@
+export const regions = {
+  "02": ["Dolnośląskie", [17.04, 51.11]],
+  "04": ["Kujawsko-pomorskie", [18.01, 53.12]],
+  "06": ["Lubelskie", [22.57, 51.25]],
+  "08": ["Lubuskie", [15.23, 52.73]],
+  10: ["Łódzkie", [19.46, 51.76]],
+  12: ["Małopolskie", [19.94, 50.06]],
+  14: ["Mazowieckie", [21.01, 52.23]],
+  16: ["Opolskie", [17.92, 50.67]],
+  18: ["Podkarpackie", [22.0, 50.04]],
+  20: ["Podlaskie", [23.16, 53.13]],
+  22: ["Pomorskie", [18.64, 54.35]],
+  24: ["Śląskie", [19.02, 50.26]],
+  26: ["Świętokrzyskie", [20.63, 50.87]],
+  28: ["Warmińsko-mazurskie", [20.48, 53.78]],
+  30: ["Wielkopolskie", [16.93, 52.41]],
+  32: ["Zachodniopomorskie", [14.55, 53.43]],
+};

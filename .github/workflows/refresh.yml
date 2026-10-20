@@ -1,0 +1,25 @@
+name: Refresh OSSA public sources
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "3-58/5 * * * *"
+permissions:
+  contents: read
+concurrency:
+  group: ossa-ingestion
+  cancel-in-progress: false
+jobs:
+  refresh:
+    if: vars.CLOUDFLARE_ACCOUNT_ID != '' && vars.CLOUDFLARE_KV_NAMESPACE_ID != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node ingestion/run.mjs
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_KV_NAMESPACE_ID: ${{ vars.CLOUDFLARE_KV_NAMESPACE_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

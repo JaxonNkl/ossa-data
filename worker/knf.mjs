@@ -16,8 +16,10 @@ export function searchKnf(query, snapshot, now = Date.now()) {
   const isIdentifier = /^(?:(?:KRS|NIP|REGON)\s*[:\-]?\s*)?[\d -]+$/i.test(
     query.trim(),
   );
+  const identifierType = query.trim().match(/^(KRS|NIP|REGON)\b/i)?.[1].toUpperCase();
   if (
     (isIdentifier && ![9, 10, 14].includes(digits.length)) ||
+    (isIdentifier && identifierType && !(identifierType === "REGON" ? [9,14] : [10]).includes(digits.length)) ||
     (!isIdentifier && (q.length < 4 || !/[a-z]/.test(q)))
   )
     throw Error("Invalid query");
@@ -34,9 +36,12 @@ export function searchKnf(query, snapshot, now = Date.now()) {
     fetched_at: snapshot?.fetched_at ?? null,
     entry_count: snapshot?.entries?.length ?? 0,
   };
-  const found = (snapshot?.entries ?? []).filter((e) =>
-    isIdentifier ? e.identifiers_search.includes(digits) : e.search.includes(q),
-  );
+  const found = (snapshot?.entries ?? []).filter((e) => {
+    if (!isIdentifier) return e.search.includes(q);
+    if (!e.identifiers_search.includes(digits)) return false;
+    if (!identifierType) return true;
+    return [...e.identifiers.matchAll(/\b(KRS|NIP|REGON)\s*[:\-]?\s*(\d[\d -]{7,17}\d)/gi)].some(m => m[1].toUpperCase() === identifierType && m[2].replace(/\D/g, "") === digits);
+  });
   return {
     verdict: !fresh ? "unknown" : found.length ? "matches" : "not_found",
     match_type: isIdentifier ? "identifier" : "text",

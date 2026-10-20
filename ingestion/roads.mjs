@@ -12,7 +12,8 @@ export async function parseRoads(raw, now = Date.now()) {
   const root = new XMLParser({
     ignoreAttributes: false,
     parseTagValue: false,
-    processEntities: false,
+    // DTD/entity declarations are rejected above; decode ordinary XML escapes.
+    processEntities: true,
   }).parse(raw).utrudnienia;
   if (!root || !root["@_gen"])
     throw Error("Missing GDDKiA generation timestamp");

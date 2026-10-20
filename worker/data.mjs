@@ -351,6 +351,25 @@ export async function hydroRecords(raw, previous = null) {
   return [...result.values()];
 }
 export function status(kind, snapshot, now = Date.now()) {
+  if (kind === "roads") {
+    const at =
+      snapshot?.generated_at && snapshot?.fetched_at
+        ? Math.min(
+            Date.parse(snapshot.generated_at),
+            Date.parse(snapshot.fetched_at),
+          )
+        : null;
+    const age = at === null ? null : (now - at) / 1000;
+    return {
+      id: "gddkia-roads",
+      name: "GDDKiA — utrudnienia drogowe",
+      status: age === null ? "unavailable" : age < 1800 ? "fresh" : "stale",
+      fetched_at: at === null ? null : new Date(at).toISOString(),
+      fresh_for_seconds: 1800,
+      last_attempt_outcome: snapshot?.last_attempt_outcome ?? null,
+      generated_at: snapshot?.generated_at ?? null,
+    };
+  }
   if (kind === "rcb") {
     const age = snapshot?.fetched_at
       ? (now - Date.parse(snapshot.fetched_at)) / 1000

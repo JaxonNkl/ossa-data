@@ -50,3 +50,6 @@ Raz na godzinę pobierana jest paczka danych stacji, indeksów i pomiarów PM10/
 
 ## Publikacje RCB
 Publiczna lista gov.pl oraz pełne treści do 10 aktualnych artykułów są odczytywane standardowym parserem HTML. Aktualizacje pozostają przed wcześniejszą treścią. Moduł nie klasyfikuje publikacji jako aktualnych alarmów i nie zgaduje obszarów ani terminów ich obowiązywania. Kopia jest zapisywana we wspólnej paczce `ossa:news` co 15 minut wraz z niezależnym stanem źródła. Łącznie z IMGW, CERT i GIOŚ nominalnie 840 zapisów na dobę.
+
+### Utrudnienia GDDKiA
+Plik XML wskazany przez oficjalny serwis GDDKiA jest pobierany co 15 minut i zapisywany jednym zapisem KV. Timestamp wygenerowania pliku jest sprawdzany; stary plik nie staje się aktualny tylko przez ponowne pobranie. Planowany termin zakończenia nie usuwa utrudnienia z widoku; wpis znika po usunięciu ze źródła. Punkty pochodzą ze współrzędnych odcinków w XML, a zasięg ogranicza się do danych objętych źródłem GDDKiA. Łączny nominalny budżet wszystkich źródeł wynosi 936 zapisów KV dziennie.

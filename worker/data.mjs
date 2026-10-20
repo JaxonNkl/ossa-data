@@ -2,6 +2,7 @@ import { regions } from "./regions.mjs";
 export const urls = {
   weather: "https://danepubliczne.imgw.pl/api/data/warningsmeteo",
   cert: "https://hole.cert.pl/domains/v2/domains.txt",
+  news: "https://moje.cert.pl/advisories/feed/",
 };
 export const attribution =
   "Źródłem pochodzenia danych jest Instytut Meteorologii i Gospodarki Wodnej – Państwowy Instytut Badawczy.";
@@ -222,6 +223,29 @@ export async function weatherRecords(raw, previous = null) {
   return [...result.values()];
 }
 export function status(kind, snapshot, now = Date.now()) {
+  if (kind === "news") {
+    const age = snapshot?.fetched_at
+      ? Math.max(0, Math.floor((now - Date.parse(snapshot.fetched_at)) / 1000))
+      : null;
+    return {
+      id: "cert-pl-notices",
+      name: "CERT Polska — komunikaty dla użytkowników",
+      url: urls.news,
+      status: age === null ? "unavailable" : age < 7200 ? "fresh" : "stale",
+      fetched_at: snapshot?.fetched_at || null,
+      age_seconds: age,
+      fresh_for_seconds: 7200,
+      last_attempt_at: snapshot?.last_attempt_at || null,
+      last_attempt_outcome: snapshot?.last_attempt_outcome || null,
+      sha256: snapshot?.sha256 || null,
+      notice_count: snapshot?.notices?.length || 0,
+      attribution: "CERT Polska / NASK-PIB",
+      license: "CC BY-SA 4.0",
+      license_url: "https://creativecommons.org/licenses/by-sa/4.0/",
+      processing:
+        "Skróty z oficjalnego RSS; pominięto formatowanie HTML i załączniki.",
+    };
+  }
   const fresh = kind === "cert" ? 3600 : 1200;
   const age = snapshot?.fetched_at
     ? Math.max(0, Math.floor((now - Date.parse(snapshot.fetched_at)) / 1000))

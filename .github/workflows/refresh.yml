@@ -1,5 +1,13 @@
 name: Refresh OSSA public sources
 on:
+  push:
+    paths:
+      [
+        "ingestion/**",
+        "worker/**",
+        "package*.json",
+        ".github/workflows/refresh.yml",
+      ]
   workflow_dispatch:
   schedule:
     - cron: "3-58/5 * * * *"
@@ -18,6 +26,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: npm
+      - run: npm ci --ignore-scripts
       - run: node ingestion/run.mjs
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}

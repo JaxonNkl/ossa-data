@@ -7,6 +7,7 @@ export async function run(store, now = Date.now(), fetcher = fetch) {
   for (const [kind, interval] of [
     ["weather", 240000],
     ["cert", 1800000],
+    ["news", 1800000],
   ]) {
     const previous = await store.get(kind);
     if (

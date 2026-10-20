@@ -1,6 +1,6 @@
 {
   "name": "ossa-data",
-  "version": "0.5.0",
+  "version": "0.7.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -8,5 +8,8 @@
   },
   "scripts": {
     "ingest": "node ingestion/run.mjs"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^5.11.2"
   }
 }

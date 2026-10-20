@@ -1,5 +1,6 @@
 import { urls, hash, certDomains, weatherRecords } from "../worker/data.mjs";
 import { boundedText } from "../worker/http.mjs";
+import { parseNotices } from "./notices.mjs";
 export async function refresh(kind, env, fetcher = fetch, now = Date.now()) {
   const previous = await env.SOURCES.get(kind, "json");
   const at = new Date(now).toISOString();
@@ -7,22 +8,27 @@ export async function refresh(kind, env, fetcher = fetch, now = Date.now()) {
     const response = await fetcher(urls[kind], {
       redirect: "manual",
       signal: AbortSignal.timeout(25000),
-      headers: { "User-Agent": "OSSA/0.4 source-integrator" },
+      headers: { "User-Agent": "OSSA/0.7 source-integrator" },
     });
-    const expected = kind === "weather" ? "application/json" : "text/plain";
-    if (
-      response.status !== 200 ||
-      !response.headers.get("content-type")?.includes(expected)
-    )
+    const type = response.headers.get("content-type") || "";
+    const validType =
+      kind === "weather"
+        ? type.includes("application/json")
+        : kind === "news"
+          ? /(?:application\/(?:rss\+xml|xml)|text\/xml)/i.test(type)
+          : type.includes("text/plain");
+    if (response.status !== 200 || !validType)
       throw Error("Invalid source response");
     const raw = await boundedText(
       response,
-      (kind === "weather" ? 8 : 15) * 1024 * 1024,
+      (kind === "weather" ? 8 : kind === "news" ? 5 : 15) * 1024 * 1024,
     );
     const parsed =
       kind === "weather"
         ? { records: await weatherRecords(raw, previous) }
-        : certDomains(raw);
+        : kind === "news"
+          ? { notices: await parseNotices(raw, now) }
+          : certDomains(raw);
     const snapshot = {
       ...parsed,
       fetched_at: at,

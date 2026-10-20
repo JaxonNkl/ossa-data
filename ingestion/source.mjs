@@ -116,6 +116,7 @@ export async function refreshNews(store, fetcher = fetch, now = Date.now()) {
     "news",
     JSON.stringify({
       ...news,
+      bundle_schema_version: 2,
       rcb,
       bundle_attempt_at: new Date(now).toISOString(),
     }),

@@ -1,4 +1,4 @@
-name: Refresh OSSA public sources
+name: OSSA scheduled data refresh
 on:
   push:
     paths:
@@ -6,11 +6,11 @@ on:
         "ingestion/**",
         "worker/**",
         "package*.json",
-        ".github/workflows/refresh.yml",
+        ".github/workflows/ingest.yml",
       ]
   workflow_dispatch:
   schedule:
-    - cron: "3,8,13,18,23,28,33,38,43,48,53,58 * * * *"
+    - cron: "4,9,14,19,24,29,34,39,44,49,54,59 * * * *"
 permissions:
   contents: read
 concurrency:

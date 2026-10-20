@@ -54,6 +54,8 @@ export async function refreshAir(store, fetcher = fetch, now = Date.now()) {
       signal: AbortSignal.any([budget, AbortSignal.timeout(12000)]),
       redirect: "error",
     });
+    if (response.status === 400 && path.startsWith("data/getData/"))
+      return { "Lista danych pomiarowych": [] };
     if (
       !response.ok ||
       !/application\/(?:ld\+)?json/.test(
@@ -80,7 +82,7 @@ export async function refreshAir(store, fetcher = fetch, now = Date.now()) {
     await Promise.all(
       Array.from({ length: 4 }, async () => {
         while (cursor < list.length) {
-            const i = cursor++,
+          const i = cursor++,
             raw = list[i],
             id = raw["Identyfikator stacji"];
           const region = Object.values(regions).find(
@@ -117,19 +119,25 @@ export async function refreshAir(store, fetcher = fetch, now = Date.now()) {
               ["PM10", "pm10"],
               ["PM2.5", "pm25"],
             ]) {
-              const sensor = sensors.find((x) => x["Wskaźnik - kod"] === code);
-              if (
-                sensor &&
-                Number.isInteger(sensor["Identyfikator stanowiska"])
-              ) {
+              const readings = [];
+              for (const sensor of sensors
+                .filter((x) => x["Wskaźnik - kod"] === code)
+                .slice(0, 3)) {
+                if (!Number.isInteger(sensor["Identyfikator stanowiska"]))
+                  continue;
                 const data = await get(
                   `data/getData/${sensor["Identyfikator stanowiska"]}?size=100`,
                 );
-                station[key] = latestMeasurement(
+                const reading = latestMeasurement(
                   data["Lista danych pomiarowych"],
                   now,
                 );
+                if (reading) readings.push(reading);
               }
+              station[key] =
+                readings.sort((a, b) =>
+                  b.measured_at.localeCompare(a.measured_at),
+                )[0] ?? null;
             }
             successful++;
           } catch {
@@ -152,6 +160,7 @@ export async function refreshAir(store, fetcher = fetch, now = Date.now()) {
       "air",
       JSON.stringify({
         stations,
+        schema_version: 2,
         fetched_at: at,
         last_attempt_at: at,
         last_attempt_outcome: failures ? "error" : "ok",

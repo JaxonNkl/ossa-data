@@ -13,6 +13,7 @@ export async function run(store, now = Date.now(), fetcher = fetch) {
   ]) {
     const previous = await store.get(kind);
     if (
+      (kind !== "air" || previous?.schema_version === 2) &&
       (previous?.bundle_attempt_at || previous?.last_attempt_at) &&
       now - Date.parse(previous.bundle_attempt_at || previous.last_attempt_at) <
         interval

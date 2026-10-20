@@ -29,9 +29,11 @@ export class CloudflareKV {
     const key =
       kind === "cert"
         ? "ossa:cert:meta"
-        : kind === "news"
-          ? "ossa:news"
-          : "ossa:weather";
+        : kind === "air"
+          ? "ossa:air"
+          : kind === "news"
+            ? "ossa:news"
+            : "ossa:weather";
     const response = await this.request(
       `/values/${encodeURIComponent(key)}`,
       {},
@@ -69,9 +71,11 @@ export class CloudflareKV {
     const key =
       kind === "cert"
         ? "ossa:cert:meta"
-        : kind === "news"
-          ? "ossa:news"
-          : "ossa:weather";
+        : kind === "air"
+          ? "ossa:air"
+          : kind === "news"
+            ? "ossa:news"
+            : "ossa:weather";
     const result = await this.request(`/values/${encodeURIComponent(key)}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },

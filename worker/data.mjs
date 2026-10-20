@@ -351,6 +351,19 @@ export async function hydroRecords(raw, previous = null) {
   return [...result.values()];
 }
 export function status(kind, snapshot, now = Date.now()) {
+  if (kind === "air") {
+    const age = snapshot?.fetched_at
+      ? (now - Date.parse(snapshot.fetched_at)) / 1000
+      : null;
+    return {
+      id: "gios-air",
+      name: "GIOŚ — jakość powietrza",
+      status: age === null ? "unavailable" : age < 7200 ? "fresh" : "stale",
+      fetched_at: snapshot?.fetched_at ?? null,
+      fresh_for_seconds: 7200,
+      last_attempt_outcome: snapshot?.last_attempt_outcome ?? null,
+    };
+  }
   if (kind === "news") {
     const age = snapshot?.fetched_at
       ? Math.max(0, Math.floor((now - Date.parse(snapshot.fetched_at)) / 1000))

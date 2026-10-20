@@ -44,3 +44,6 @@ Pobieramy kategorię „Dla użytkowników”, maksymalnie 12 publikacji z ostat
 
 ## Hydrologia IMGW
 Ostrzeżenia hydrologiczne i meteorologiczne są pobierane niezależnie, a następnie publikowane jednym zapisem w `ossa:weather`. Każde źródło zachowuje własny czas pobrania i stan ostatniej próby. Nieudana próba jednego źródła nie usuwa poprzedniej kopii ani nie blokuje aktualizacji drugiego. Nominalny budżet pozostaje 768 zapisów KV na dobę. GitHub Actions schedule jest best effort, może mieć opóźnienia; stan świeżości musi pozostać widoczny w aplikacji.
+
+## GIOŚ
+Raz na godzinę pobierana jest paczka danych stacji, indeksów i pomiarów PM10/PM2.5, publikowana jako `ossa:air` (24 dodatkowe zapisy na dobę, nominalnie 792 łącznie). Cztery równoległe połączenia; częściowe błędy zachowują starsze dane danej stacji z oznaczeniem nieaktualności. Timestampy pomiarów są interpretowane w strefie Europe/Warsaw.

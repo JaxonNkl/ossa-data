@@ -2,6 +2,7 @@ import { pathToFileURL } from "node:url";
 import { CloudflareKV } from "./cloudflare-kv.mjs";
 import { refreshRoads } from "./roads.mjs";
 import { refreshAir } from "./air.mjs";
+import { refreshKnf } from "./knf.mjs";
 import { refresh, refreshImgw, refreshNews } from "./source.mjs";
 
 export async function run(store, now = Date.now(), fetcher = fetch) {
@@ -12,6 +13,7 @@ export async function run(store, now = Date.now(), fetcher = fetch) {
     ["news", 900000],
     ["air", 3600000],
     ["roads", 900000],
+    ["knf", 86400000],
   ]) {
     const previous = await store.get(kind);
     if (
@@ -26,13 +28,15 @@ export async function run(store, now = Date.now(), fetcher = fetch) {
     }
     result[kind] = (await (kind === "weather"
       ? refreshImgw(store, fetcher, now)
-      : kind === "roads"
-        ? refreshRoads(store, fetcher, now)
-        : kind === "news"
-          ? refreshNews(store, fetcher, now)
-          : kind === "air"
-            ? refreshAir(store, fetcher, now)
-            : refresh(kind, { SOURCES: store }, fetcher, now)))
+      : kind === "knf"
+        ? refreshKnf(store, fetcher, now)
+        : kind === "roads"
+          ? refreshRoads(store, fetcher, now)
+          : kind === "news"
+            ? refreshNews(store, fetcher, now)
+            : kind === "air"
+              ? refreshAir(store, fetcher, now)
+              : refresh(kind, { SOURCES: store }, fetcher, now)))
       ? "ok"
       : "error";
   }

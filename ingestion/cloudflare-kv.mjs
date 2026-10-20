@@ -27,15 +27,17 @@ export class CloudflareKV {
   }
   async get(kind) {
     const key =
-      kind === "cert"
-        ? "ossa:cert:meta"
-        : kind === "roads"
-          ? "ossa:roads"
-          : kind === "air"
-            ? "ossa:air"
-            : kind === "news"
-              ? "ossa:news"
-              : "ossa:weather";
+      kind === "knf"
+        ? "ossa:knf"
+        : kind === "cert"
+          ? "ossa:cert:meta"
+          : kind === "roads"
+            ? "ossa:roads"
+            : kind === "air"
+              ? "ossa:air"
+              : kind === "news"
+                ? "ossa:news"
+                : "ossa:weather";
     const response = await this.request(
       `/values/${encodeURIComponent(key)}`,
       {},
@@ -71,15 +73,17 @@ export class CloudflareKV {
       snapshot = { ...metadata, version, shard_count: 8 };
     }
     const key =
-      kind === "cert"
-        ? "ossa:cert:meta"
-        : kind === "roads"
-          ? "ossa:roads"
-          : kind === "air"
-            ? "ossa:air"
-            : kind === "news"
-              ? "ossa:news"
-              : "ossa:weather";
+      kind === "knf"
+        ? "ossa:knf"
+        : kind === "cert"
+          ? "ossa:cert:meta"
+          : kind === "roads"
+            ? "ossa:roads"
+            : kind === "air"
+              ? "ossa:air"
+              : kind === "news"
+                ? "ossa:news"
+                : "ossa:weather";
     const result = await this.request(`/values/${encodeURIComponent(key)}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },

@@ -74,7 +74,9 @@ export async function refresh(kind, env, fetcher = fetch, now = Date.now()) {
 // Publish both independent IMGW snapshots in one KV write; a failed source
 // retains its own previous copy and timestamps without affecting the other.
 export async function refreshImgw(store, fetcher = fetch, now = Date.now()) {
+  const {refreshOperations}=await import("./operations.mjs");
   const previous = await store.get("weather");
+  const operations=await refreshOperations(previous?.operations,fetcher,now);
   const copies = { weather: previous, hydro: previous?.hydro ?? null };
   const memory = {
     get: async (kind) => copies[kind],
@@ -92,6 +94,7 @@ export async function refreshImgw(store, fetcher = fetch, now = Date.now()) {
     JSON.stringify({
       ...copies.weather,
       hydro: copies.hydro,
+      operations,
       bundle_attempt_at: new Date(now).toISOString(),
     }),
   );
@@ -118,7 +121,7 @@ export async function refreshNews(store, fetcher = fetch, now = Date.now()) {
     "news",
     JSON.stringify({
       ...news,
-      bundle_schema_version: 4,
+      bundle_schema_version: 5,
       rcb,
       paa,
       bundle_attempt_at: new Date(now).toISOString(),

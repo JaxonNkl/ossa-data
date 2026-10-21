@@ -56,3 +56,8 @@ Plik XML wskazany przez oficjalny serwis GDDKiA jest pobierany co 15 minut i zap
 
 ## KNF
 Oficjalna lista ostrzeżeń publicznych jest pobierana raz na 24 godziny (1 zapis KV). Parser sprawdza liczbę wpisów zadeklarowaną przez źródło i zachowuje wszystkie kolumny, w tym orzeczenia i aktualizacje. Wyszukiwanie nie jest oceną wiarygodności ani integracją BOZON. Nieudane pobranie zachowuje poprzednią kopię bez zmiany daty jej pobrania.
+
+
+Dodatkowe źródła w paczce IMGW: publiczne ADSB.lol (`https://api.adsb.lol/docs`, ODbL 1.0) co 5 min, publiczny plik NASA FIRMS VIIRS NOAA-20 Europe 24 h (`https://firms.modaps.eosdis.nasa.gov/active_fire/`) co godzinę i kontrola dostępności oficjalnej strony DORSZ co godzinę. Nie wymagają dodatkowych sekretów. Agent żądań ADS-B zawiera publiczne adresy projektu. Operator ADSB.lol prosi o kontakt przy zastosowaniu produkcyjnym i może zmienić dostępność API.
+
+Brak pełnego pokrycia ADS-B, źródła ciepła przemysłowego oraz blokada odczytu DORSZ nie są interpretowane jako ocena bezpieczeństwa. Dane lotnicze są niezależną warstwą ODbL 1.0, z atrybucją w API i interfejsie.

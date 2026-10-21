@@ -17,8 +17,9 @@ export async function run(store, now = Date.now(), fetcher = fetch) {
   ]) {
     const previous = await store.get(kind);
     if (
+      (kind !== "weather" || previous?.operations?.schema_version === 1) &&
       (kind !== "air" || previous?.schema_version === 2) &&
-      (kind !== "news" || previous?.bundle_schema_version === 4) &&
+      (kind !== "news" || previous?.bundle_schema_version === 5) &&
       (previous?.bundle_attempt_at || previous?.last_attempt_at) &&
       now - Date.parse(previous.bundle_attempt_at || previous.last_attempt_at) <
         interval

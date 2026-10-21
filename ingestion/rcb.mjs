@@ -85,6 +85,7 @@ export function rcbArticle(html, item) {
   return {
     ...item,
     ...rcbScope(body),
+    topics: /dron|bezzałog|powietrzn|z powietrza/iu.test(title+" "+body)?["airspace"]:[],
     title,
     excerpt: body.slice(0, 1400),
     kind: /ćwicze|trening/i.test(title)

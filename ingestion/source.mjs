@@ -100,6 +100,7 @@ export async function refreshImgw(store, fetcher = fetch, now = Date.now()) {
 
 export async function refreshNews(store, fetcher = fetch, now = Date.now()) {
   const { refreshRcb } = await import("./rcb.mjs");
+  const { refreshPaa } = await import("./paa.mjs");
   const previous = await store.get("news");
   let news = previous;
   const memory = {
@@ -108,9 +109,10 @@ export async function refreshNews(store, fetcher = fetch, now = Date.now()) {
       news = JSON.parse(value);
     },
   };
-  const [ok, rcb] = await Promise.all([
+  const [ok, rcb, paa] = await Promise.all([
     refresh("news", { SOURCES: memory }, fetcher, now),
     refreshRcb(previous?.rcb, fetcher, now),
+    refreshPaa(previous?.paa, fetcher, now),
   ]);
   await store.put(
     "news",
@@ -118,8 +120,9 @@ export async function refreshNews(store, fetcher = fetch, now = Date.now()) {
       ...news,
       bundle_schema_version: 2,
       rcb,
+      paa,
       bundle_attempt_at: new Date(now).toISOString(),
     }),
   );
-  return ok && rcb.last_attempt_outcome === "ok";
+  return ok && rcb.last_attempt_outcome === "ok" && paa.last_attempt_outcome === "ok";
 }

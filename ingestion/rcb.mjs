@@ -1,3 +1,4 @@
+import {rcbScope} from "./rcb-scope.mjs";
 import { parse } from "parse5";
 import { boundedText } from "../worker/http.mjs";
 const origin = "https://www.gov.pl",
@@ -83,6 +84,7 @@ export function rcbArticle(html, item) {
     throw Error("Invalid RCB article");
   return {
     ...item,
+    ...rcbScope(body),
     title,
     excerpt: body.slice(0, 1400),
     kind: /ćwicze|trening/i.test(title)

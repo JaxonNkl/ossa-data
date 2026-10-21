@@ -122,17 +122,42 @@ export async function parseRoads(raw, now = Date.now()) {
   }
   return { events, generated_at };
 }
+function roadFailure(error) {
+  const known = {
+    "GDDKiA source is not current": "source_not_current",
+    "Invalid GDDKiA XML": "invalid_xml",
+    "Missing GDDKiA generation timestamp": "missing_generation",
+    "Invalid road record": "invalid_record",
+    "Invalid timestamp": "invalid_timestamp",
+    "Too many road records": "too_many_records",
+  };
+  if (known[error?.message]) return known[error.message];
+  if (/^HTTP [1-5][0-9]{2}$/.test(error?.message ?? "")) return error.message.replace("HTTP ", "http_");
+  if (["TimeoutError", "AbortError"].includes(error?.name)) return "timeout";
+  if (["ECONNREFUSED", "ECONNRESET", "ENOTFOUND", "ETIMEDOUT", "UND_ERR_CONNECT_TIMEOUT"].includes(error?.cause?.code)) return "connection";
+  return "fetch_or_parse_failed";
+}
 export async function refreshRoads(store, fetcher = fetch, now = Date.now()) {
   const previous = await store.get("roads"),
     at = new Date(now).toISOString();
   try {
-    const r = await fetcher(roadsUrl, {
-      redirect: "error",
-      signal: AbortSignal.timeout(20000),
-    });
-    if (!r.ok) throw Error();
-    const raw = await boundedText(r, 8 * 1024 * 1024);
-    const parsed = await parseRoads(raw, now);
+    let parsed;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const r = await fetcher(roadsUrl, {
+          redirect: "error",
+          signal: AbortSignal.timeout(20000),
+        });
+        if (!r.ok) throw Error(`HTTP ${r.status}`);
+        const raw = await boundedText(r, 8 * 1024 * 1024);
+        parsed = await parseRoads(raw, now);
+        break;
+      } catch (error) {
+        const code = roadFailure(error);
+        if (attempt === 0 && /^(connection|timeout|http_429|http_5[0-9]{2})$/.test(code)) continue;
+        throw error;
+      }
+    }
     await store.put(
       "roads",
       JSON.stringify({
@@ -140,16 +165,20 @@ export async function refreshRoads(store, fetcher = fetch, now = Date.now()) {
         fetched_at: at,
         last_attempt_at: at,
         last_attempt_outcome: "ok",
+        last_attempt_error: null,
       }),
     );
     return true;
-  } catch {
+  } catch (error) {
+    const reason = roadFailure(error);
+    console.warn(JSON.stringify({source:"roads",status:"refresh_failed",reason}));
     await store.put(
       "roads",
       JSON.stringify({
         ...previous,
         last_attempt_at: at,
         last_attempt_outcome: "error",
+        last_attempt_error: reason,
       }),
     );
     return false;

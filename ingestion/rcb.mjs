@@ -108,9 +108,19 @@ export async function refreshRcb(previous, fetcher = fetch, now = Date.now()) {
   try {
     const items = rcbLinks(await html(listUrl), now),
       publications = [];
-    for (const item of items)
-      publications.push(rcbArticle(await html(item.url), item));
+    let unavailable_count = 0;
+    for (const item of items) {
+      try {
+        publications.push(rcbArticle(await html(item.url), item));
+      } catch {
+        unavailable_count++;
+      }
+    }
+    // Never let one broken source link discard the other verified articles.
+    // If nothing was readable, preserve the previous snapshot and its timestamp.
+    if (!publications.length) throw Error("All RCB articles unavailable");
     return {
+      unavailable_count,
       publications,
       fetched_at: at,
       last_attempt_at: at,

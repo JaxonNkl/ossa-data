@@ -375,6 +375,7 @@ export function status(kind, snapshot, now = Date.now()) {
       ? (now - Date.parse(snapshot.fetched_at)) / 1000
       : null;
     return {
+      unavailable_count: snapshot?.unavailable_count ?? 0,
       id: "rcb-publications",
       name: "Rządowe Centrum Bezpieczeństwa",
       status: age === null ? "unavailable" : age < 3600 ? "fresh" : "stale",

@@ -4,6 +4,7 @@ import { refreshRoads } from "./roads.mjs";
 import { refreshAir } from "./air.mjs";
 import { refreshKnf } from "./knf.mjs";
 import { refresh, refreshImgw, refreshNews } from "./source.mjs";
+import { ROADS_SOURCE_ACTIVE } from "../worker/sources.mjs";
 
 export async function run(store, now = Date.now(), fetcher = fetch) {
   const result = {};
@@ -15,7 +16,7 @@ export async function run(store, now = Date.now(), fetcher = fetch) {
     ["air", 3600000],
     ["roads", 900000],
     ["knf", 86400000],
-  ]) {
+  ].filter(([kind]) => kind !== "roads" || ROADS_SOURCE_ACTIVE)) {
     const previous = await store.get(kind);
     if (
       (kind !== "weather" || previous?.operations?.schema_version === 1) &&

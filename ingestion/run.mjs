@@ -57,7 +57,13 @@ if (
     });
     const result = await run(store);
     console.log(JSON.stringify(result));
-    if (Object.values(result).includes("error")) process.exitCode = 1;
+    // A single failed source fetch is routine (the previous copy is kept and
+    // the site marks it as outdated). It is reported as a warning; prolonged
+    // staleness is alerted by the Cloudflare Worker (worker/alerts.mjs).
+    // The run fails only on configuration or integrator errors (catch below).
+    for (const [kind, outcome] of Object.entries(result))
+      if (outcome === "error")
+        console.log(`::warning title=OSSA source::${kind} refresh failed; previous copy kept`);
   } catch (error) {
     // Config errors deliberately carry no raw provider responses or secrets.
     console.error(error.message);

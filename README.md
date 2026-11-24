@@ -32,6 +32,8 @@ Po ustawieniu konfiguracji wybierz Actions → Refresh OSSA public sources → R
 
 Standardowe runnery publicznych repozytoriów GitHub Actions są bezpłatne. Harmonogram nie jest gwarancją punktualnego wykonania; GitHub może opóźniać zadania. GitHub wyłącza harmonogram po 60 dniach bez aktywności repozytorium — sprawdzaj stan Actions i w razie potrzeby włącz go ponownie.
 
+Pojedyncze nieudane pobranie źródła jest ostrzeżeniem (`::warning::`) i nie oznacza nieudanego workflow; poprzednia kopia zostaje. Długotrwały brak aktualnych danych zgłasza Worker Cloudflare mailem do właściciela. Workflow kończy się błędem tylko przy błędzie konfiguracji lub integratora.
+
 Nominalny budżet KV to ok. 421 zapisów na dobę: 144 IMGW/ADS-B, 12 × 9 CERT, 48 RSS/RCB/PAA, 96 GDDKiA, 24 GIOŚ i 1 KNF (test symulacji doby sprawdza tę liczbę). Zmiany ostrzeżeń IMGW dodają pojedyncze zapisy. Błędy po częściowym zapisie i ręczne operacje mogą zwiększyć zużycie. Limit darmowego konta KV wynosi 1000 zapisów na dobę i jest współdzielony z innymi projektami. Nie włączaj równoległej kopii integratora ani drugiego harmonogramu w repozytorium aplikacji.
 
 Części CERT wygasają po 6 godzinach. Aplikacja traktuje kopię starszą niż 3 godziny jako nieaktualną i zwraca `unknown`. Brak domeny na liście nie jest gwarancją bezpieczeństwa. Wynik może być chwilowo nieznany również w czasie propagacji nowej kopii KV.

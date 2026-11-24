@@ -8,9 +8,10 @@ import { refresh, refreshImgw, refreshNews } from "./source.mjs";
 export async function run(store, now = Date.now(), fetcher = fetch) {
   const result = {};
   for (const [kind, interval] of [
+    // Intervals are sized for the Workers KV Free plan (1,000 writes/day).
     ["weather", 300000],
-    ["cert", 1800000],
-    ["news", 900000],
+    ["cert", 7200000],
+    ["news", 1800000],
     ["air", 3600000],
     ["roads", 900000],
     ["knf", 86400000],

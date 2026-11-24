@@ -71,8 +71,36 @@ export async function refresh(kind, env, fetcher = fetch, now = Date.now()) {
   }
 }
 
+// Timestamps change on every run; they alone do not justify a KV write.
+const volatile = new Set(["fetched_at", "last_attempt_at", "bundle_attempt_at", "written_at"]);
+export function withoutTimestamps(value) {
+  if (Array.isArray(value)) return value.map(withoutTimestamps);
+  if (!value || typeof value !== "object") return value;
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(([key]) => !volatile.has(key))
+      .map(([key, item]) => [key, withoutTimestamps(item)]),
+  );
+}
+// The weather bundle is read as current for 20 minutes. When nothing but
+// timestamps changed, a write is still made at least this often so the copy
+// never looks stale; ADS-B updates (about every 10 minutes) also force a write.
+export const WEATHER_HEARTBEAT = 540000;
+export function weatherWriteNeeded(previous, next, now) {
+  const written = Date.parse(previous?.written_at ?? "");
+  return (
+    !previous ||
+    !Number.isFinite(written) ||
+    now < written ||
+    now - written >= WEATHER_HEARTBEAT ||
+    JSON.stringify(withoutTimestamps(previous)) !==
+      JSON.stringify(withoutTimestamps(next))
+  );
+}
+
 // Publish both independent IMGW snapshots in one KV write; a failed source
 // retains its own previous copy and timestamps without affecting the other.
+// Unchanged bundles are not rewritten until the heartbeat is due.
 export async function refreshImgw(store, fetcher = fetch, now = Date.now()) {
   const {refreshOperations}=await import("./operations.mjs");
   const previous = await store.get("weather");
@@ -89,15 +117,15 @@ export async function refreshImgw(store, fetcher = fetch, now = Date.now()) {
       refresh(kind, { SOURCES: memory }, fetcher, now),
     ),
   );
-  await store.put(
-    "weather",
-    JSON.stringify({
-      ...copies.weather,
-      hydro: copies.hydro,
-      operations,
-      bundle_attempt_at: new Date(now).toISOString(),
-    }),
-  );
+  const next = {
+    ...copies.weather,
+    hydro: copies.hydro,
+    operations,
+    bundle_attempt_at: new Date(now).toISOString(),
+    written_at: new Date(now).toISOString(),
+  };
+  if (weatherWriteNeeded(previous, next, now))
+    await store.put("weather", JSON.stringify(next));
   return results.every(Boolean);
 }
 

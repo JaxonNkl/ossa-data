@@ -424,7 +424,7 @@ export function status(kind, snapshot, now = Date.now()) {
         "Skróty z oficjalnego RSS; pominięto formatowanie HTML i załączniki.",
     };
   }
-  const fresh = kind === "cert" ? 3600 : 1200;
+  const fresh = kind === "cert" ? 10800 : 1200;
   const age = snapshot?.fetched_at
     ? Math.max(0, Math.floor((now - Date.parse(snapshot.fetched_at)) / 1000))
     : null;

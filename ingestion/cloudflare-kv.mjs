@@ -53,7 +53,7 @@ export class CloudflareKV {
       const items = shards.map((value, index) => ({
         key: `ossa:cert:${version}:${index}`,
         value: JSON.stringify(value),
-        expiration_ttl: 14400,
+        expiration_ttl: 21600,
       }));
       if (items.some((x) => Buffer.byteLength(x.value) > 1024 * 1024))
         throw Error("CERT shard exceeds the Free runtime size budget");
